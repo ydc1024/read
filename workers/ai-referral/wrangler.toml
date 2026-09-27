@@ -1,0 +1,16 @@
+name = "geo-ai-referral"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# 源站（Cloudflare Pages 默认域名或生产域名）
+[vars]
+ORIGIN = "https://geo-site.pages.dev"
+SUPABASE_URL = "https://replace-with-project.supabase.co"
+
+# 路由：绑定到站点域名前，拦截并记录 AI 引荐
+# [[routes]]
+# pattern = "jscloud.aicopy.work/*"
+# zone_name = "aicopy.work"
+
+# 密钥：
+#   wrangler secret put SUPABASE_SERVICE_KEY
