@@ -1,0 +1,130 @@
+---
+/**
+ * 内容单元页面布局（工程规格书 §P1-3、§9.1）。
+ * 语义结构：article > header(h1 + answer-summary) → 正文 → 核心实体 → FAQ → 来源 → CTA。
+ */
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import EntityGraph from '../components/EntityGraph.astro';
+import CTAConclusion from '../components/CTAConclusion.astro';
+import { SCENARIOS } from '../lib/scenarios';
+import { SITE_URL, SITE, buildLandingUrl, pickAnchor } from '../lib/site';
+
+export interface Props {
+  entry: CollectionEntry<'units'>;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const data = entry.data;
+
+const scenario = SCENARIOS[data.scenario];
+const canonicalPath = `/${entry.id}/`;
+const ogImage = data.ogImage ?? scenario?.ogImage ?? '/images/og/default.svg';
+
+const dateFmt = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const breadcrumbs = [
+  { name: '首页', url: `${SITE_URL}/` },
+  { name: data.title, url: `${SITE_URL}${canonicalPath}` },
+];
+
+// 落地页引流：链接带 UTM 归因；锚文本按 slug 稳定轮换（跨页不重复）
+const ctaHref = buildLandingUrl(data.scenario, data.cta.link);
+const ctaAnchor = data.cta.anchor ?? pickAnchor(entry.id, data.scenario);
+
+const schemaProps = {
+  title: data.title,
+  description: data.description,
+  url: `${SITE_URL}${canonicalPath}`,
+  datePublished: data.pubDate,
+  dateModified: data.updatedDate ?? data.pubDate,
+  about: scenario ? [scenario.label, ...SITE.productLines] : [...SITE.productLines],
+  mentions: data.entities.map((e) => ({
+    name: e.name,
+    type: e.type,
+    sameAs: e.sameAs,
+  })),
+  faq: data.faq,
+  schemaType: data.schemaType,
+  breadcrumbs,
+};
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  ogImage={ogImage}
+  canonicalPath={canonicalPath}
+  schemaProps={schemaProps}
+>
+  <article class="content-unit">
+    <Breadcrumb items={breadcrumbs} />
+
+    <header class="unit-header">
+      {scenario && <p class="unit-scenario">{scenario.label}</p>}
+      <h1>{data.title}</h1>
+      <p class="answer-summary">{data.answerSummary}</p>
+      <p class="unit-meta">
+        <time datetime={data.pubDate.toISOString()}>
+          发布于 {dateFmt.format(data.pubDate)}
+        </time>
+        {
+          data.updatedDate && (
+            <time datetime={data.updatedDate.toISOString()}>
+              更新于 {dateFmt.format(data.updatedDate)}
+            </time>
+          )
+        }
+      </p>
+    </header>
+
+    <section class="unit-evidence" aria-label="详细说明">
+      <Content />
+    </section>
+
+    <EntityGraph entities={data.entities} />
+
+    {
+      data.faq.length > 0 && (
+        <section class="unit-faq" aria-label="常见问题">
+          <h2>常见问题</h2>
+          <dl>
+            {data.faq.map((item) => (
+              <>
+                <dt>{item.question}</dt>
+                <dd>{item.answer}</dd>
+              </>
+            ))}
+          </dl>
+        </section>
+      )
+    }
+
+    {
+      data.sourceFacts.length > 0 && (
+        <section class="unit-sources" aria-label="资料来源">
+          <h2>资料来源</h2>
+          <ol>
+            {data.sourceFacts.map((fact) => (
+              <li>
+                <a href={fact.sourceUrl} rel="noopener noreferrer">
+                  {fact.sourceTitle ?? fact.sourceUrl}
+                </a>
+                <span class="src-statement"> — {fact.statement}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    {ctaHref && <CTAConclusion text={data.cta.text} link={ctaHref} anchor={ctaAnchor} />}
+  </article>
+</BaseLayout>

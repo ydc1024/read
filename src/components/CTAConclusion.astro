@@ -1,0 +1,21 @@
+---
+/**
+ * 场景化结论段落（CTA）。
+ * 自然指向落地页，无生硬植入。
+ * 锚文本由外部按场景锚文本池轮换（ContentUnitLayout → pickAnchor），保证跨页不重复。
+ * 同域（同注册域跨子域）链接：dofollow，不加 nofollow。
+ */
+export interface Props {
+  text: string;
+  link: string;
+  /** 锚文本（来自锚文本池，按 slug 轮换）。缺省回退到品牌通用锚文本 */
+  anchor?: string;
+}
+
+const { text, link, anchor = '查看闪速cloud 节点方案' } = Astro.props;
+---
+
+<aside class="cta-conclusion">
+  <p>{text}</p>
+  <a class="cta-link" href={link} rel="noopener">{anchor} →</a>
+</aside>

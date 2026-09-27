@@ -1,0 +1,26 @@
+---
+/**
+ * 面包屑导航（可视化部分；结构化数据由 SchemaOrg.astro 输出）。
+ */
+export interface Props {
+  items: { name: string; url: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumb" aria-label="面包屑导航">
+  <ol>
+    {
+      items.map((item, index) => (
+        <li>
+          {index < items.length - 1 ? (
+            <a href={item.url}>{item.name}</a>
+          ) : (
+            <span aria-current="page">{item.name}</span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

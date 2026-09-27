@@ -1,0 +1,25 @@
+---
+/**
+ * 内容单元详情页。
+ * 仅 published 状态的内容单元参与静态路径生成（draft/pending_review 不产出页面）。
+ */
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import ContentUnitLayout from '../layouts/ContentUnitLayout.astro';
+
+export async function getStaticPaths() {
+  const units = await getCollection(
+    'units',
+    ({ data }) => data.status === 'published',
+  );
+
+  return units.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry } satisfies { entry: CollectionEntry<'units'> },
+  }));
+}
+
+const { entry } = Astro.props;
+---
+
+<ContentUnitLayout entry={entry} />

@@ -1,0 +1,37 @@
+# 站点根 robots.txt
+# GEO 目标依赖 AI 爬虫可索引，需显式放行主流 AI 爬虫（工程规格书 G8）。
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+
+# ---------- AI 爬虫白名单 ----------
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+Sitemap: https://jscloud.aicopy.work/sitemap-index.xml

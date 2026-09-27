@@ -1,0 +1,39 @@
+---
+/**
+ * 实体关系标记组件。
+ * 页面中以语义化列表呈现核心实体，供 AI 与搜索引擎识别实体关系。
+ */
+export interface Props {
+  entities: {
+    name: string;
+    type: string;
+    sameAs?: string;
+    relatedTo?: string[];
+  }[];
+}
+
+const { entities } = Astro.props;
+---
+
+<section class="entity-graph" aria-label="核心实体">
+  <h2>核心实体</h2>
+  <ul>
+    {
+      entities.map((entity) => (
+        <li class="entity" data-entity-type={entity.type}>
+          {entity.sameAs ? (
+            <a href={entity.sameAs} rel="noopener noreferrer">
+              {entity.name}
+            </a>
+          ) : (
+            <span class="entity-name">{entity.name}</span>
+          )}
+          <span class="entity-type">{entity.type}</span>
+          {entity.relatedTo && entity.relatedTo.length > 0 && (
+            <span class="entity-rel">关联：{entity.relatedTo.join('、')}</span>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</section>

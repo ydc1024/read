@@ -1,0 +1,130 @@
+---
+/**
+ * Schema JSON-LD 注入组件（工程规格书 §9.1）。
+ * 以 @graph 形式输出 Organization + Article + FAQPage + BreadcrumbList。
+ * 数据来源：页面数据与内容单元 Frontmatter。
+ */
+import { ORGANIZATION_ENTITY, AUTHOR_ENTITY, SITE, SITE_URL } from '../lib/site';
+
+export interface SchemaMention {
+  name: string;
+  type: string;
+  sameAs?: string;
+}
+
+export interface SchemaFaq {
+  question: string;
+  answer: string;
+}
+
+export interface SchemaBreadcrumb {
+  name: string;
+  url: string;
+}
+
+export interface Props {
+  title?: string;
+  description?: string;
+  url?: string;
+  datePublished?: Date;
+  dateModified?: Date;
+  /** about 实体名 */
+  about?: string[];
+  /** mentions 实体（含 sameAs） */
+  mentions?: SchemaMention[];
+  faq?: SchemaFaq[];
+  schemaType?: 'FAQPage' | 'Article' | 'HowTo';
+  breadcrumbs?: SchemaBreadcrumb[];
+  /** 首页是否输出 WebSite 节点 */
+  webSite?: boolean;
+}
+
+const {
+  title,
+  description,
+  url,
+  datePublished,
+  dateModified,
+  about = [],
+  mentions = [],
+  faq = [],
+  schemaType = 'Article',
+  breadcrumbs = [],
+  webSite = false,
+} = Astro.props;
+
+/**
+ * 主实体类型：schemaType 取自 frontmatter（对应 FAQ/Article/HowTo 三类内容模板）。
+ * FAQPage 的主实体由下方独立 FAQPage 节点承载，故基座节点仍用 Article，
+ * 避免 @graph 中出现两个同类型主节点；HowTo/Article 直接作为主节点类型输出。
+ */
+const primaryType = schemaType === 'FAQPage' ? 'Article' : schemaType;
+
+const nodes: Record<string, unknown>[] = [];
+
+// Organization（全站注入）
+nodes.push({ ...ORGANIZATION_ENTITY });
+
+// WebSite（仅首页）
+if (webSite) {
+  nodes.push({
+    '@type': 'WebSite',
+    name: SITE.name,
+    url: SITE_URL,
+    inLanguage: 'zh-CN',
+    publisher: { ...ORGANIZATION_ENTITY },
+  });
+}
+
+// 主实体（基础标记，类型由 schemaType 决定）
+if (title) {
+  nodes.push({
+    '@type': primaryType,
+    headline: title,
+    description,
+    datePublished: datePublished?.toISOString(),
+    dateModified: (dateModified ?? datePublished)?.toISOString(),
+    author: { ...AUTHOR_ENTITY },
+    publisher: { ...AUTHOR_ENTITY },
+    mainEntityOfPage: url,
+    about: about.map((name) => ({ '@type': 'Thing', name })),
+    mentions: mentions.map((m) => ({
+      '@type': m.type,
+      name: m.name,
+      ...(m.sameAs ? { sameAs: m.sameAs } : {}),
+    })),
+  });
+}
+
+// FAQPage（核心 Schema，凡有 FAQ 即输出，不限于 schemaType）
+if (faq.length > 0) {
+  nodes.push({
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  });
+}
+
+// BreadcrumbList（页面层级导航）
+if (breadcrumbs.length > 0) {
+  nodes.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((b, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: b.name,
+      item: b.url,
+    })),
+  });
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': nodes,
+};
+---
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />

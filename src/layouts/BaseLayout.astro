@@ -1,0 +1,104 @@
+---
+/**
+ * 站点基础布局（工程规格书 §P1-3）。
+ * 统一 head 元信息、OG、canonical、RSS、Schema JSON-LD 注入点与页头页脚。
+ */
+import { SITE, SITE_URL, LANDING_PAGE_URL } from '../lib/site';
+import SchemaOrg from '../components/SchemaOrg.astro';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+  /** OG 图路径（相对站点根，如 /images/og/streaming.svg） */
+  ogImage?: string;
+  /** 规范链接路径（默认取当前路径） */
+  canonicalPath?: string;
+  /** 透传给 SchemaOrg 的结构化数据属性 */
+  schemaProps?: Record<string, unknown>;
+  /** 是否禁止索引（草稿预览等） */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = SITE.description,
+  ogImage = '/images/og/default.png',
+  canonicalPath,
+  schemaProps,
+  noindex = false,
+} = Astro.props;
+
+const path = canonicalPath ?? Astro.url.pathname;
+const canonicalURL = new URL(path, SITE_URL).href;
+const ogImageURL = new URL(ogImage, SITE_URL).href;
+const pageTitle = title === SITE.name ? title : `${title} | ${SITE.name}`;
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex,follow" />}
+    <link rel="canonical" href={canonicalURL} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${SITE.name} RSS`}
+      href="/rss.xml"
+    />
+
+    <SchemaOrg {...(schemaProps ?? {})} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/">{SITE.name}</a>
+        <nav class="site-nav" aria-label="主导航">
+          <a href="/#scenarios">场景方案</a>
+          <a href="/#products">节点产品</a>
+          <a href="/rss.xml">RSS</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <div class="container">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>{SITE.name} — {SITE.description}</p>
+        <nav class="footer-nav" aria-label="页脚导航">
+          {/* 落地页固定链接（辅助导航，低权重；dofollow，同注册域跨子域） */}
+          <a href={LANDING_PAGE_URL} rel="noopener">产品与方案</a>
+        </nav>
+        <p class="footer-meta">© {year} {SITE.name}</p>
+      </div>
+    </footer>
+  </body>
+</html>

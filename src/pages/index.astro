@@ -1,0 +1,88 @@
+---
+/**
+ * 首页（工程规格书 §P1-3）。
+ * 品牌简介 + 按业务场景分组的内容单元索引 + 节点产品线。
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SCENARIO_LIST } from '../lib/scenarios';
+import { SITE, SITE_URL } from '../lib/site';
+
+const units = (
+  await getCollection('units', ({ data }) => data.status === 'published')
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const groups = SCENARIO_LIST.map((scenario) => ({
+  scenario,
+  items: units.filter((unit) => unit.data.scenario === scenario.key),
+})).filter((group) => group.items.length > 0);
+
+const dateFmt = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const schemaProps = {
+  title: SITE.name,
+  description: SITE.description,
+  url: SITE_URL,
+  webSite: true,
+};
+---
+
+<BaseLayout title={SITE.name} description={SITE.description} schemaProps={schemaProps}>
+  <section class="hero">
+    <h1>{SITE.name} · 跨境节点与海外网络方案知识库</h1>
+    <p class="lead">{SITE.description}</p>
+    <ul class="tag-list">
+      {SITE.differentiators.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+
+  <section id="scenarios" aria-label="业务场景方案">
+    <h2 class="section-title">按业务场景查找方案</h2>
+    {
+      groups.length === 0 ? (
+        <p>内容建设中。</p>
+      ) : (
+        groups.map((group) => (
+          <div class="scenario-group">
+            <h3 class="section-title">{group.scenario.label}</h3>
+            <ul class="card-list">
+              {group.items.map((unit) => (
+                <li class="card">
+                  <h3>
+                    <a href={`/${unit.id}/`}>{unit.data.title}</a>
+                  </h3>
+                  <p>{unit.data.answerSummary}</p>
+                  <p class="meta">
+                    {dateFmt.format(unit.data.pubDate)} · {unit.data.intent}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      )
+    }
+  </section>
+
+  <section id="products" aria-label="节点产品线">
+    <h2 class="section-title">节点产品线</h2>
+    <ul class="product-list">
+      <li>
+        <strong>香港节点</strong>
+        <span>面向国内访问与东南亚业务的低延迟接入。</span>
+      </li>
+      <li>
+        <strong>美国节点</strong>
+        <span>面向北美平台与 AI 服务的稳定访问。</span>
+      </li>
+      <li>
+        <strong>一对一专线</strong>
+        <span>独立带宽、固定接入人数，晚高峰体验可预期。</span>
+      </li>
+    </ul>
+  </section>
+</BaseLayout>
