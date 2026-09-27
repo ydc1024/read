@@ -9,7 +9,7 @@
 
 backend:
   name: github
-  repo: ydc1024/read/tree/main
+  repo: ydc1024/read
   branch: main
   base_url: https:auth.aicopy.work
   commit_messages:
