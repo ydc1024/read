@@ -9,9 +9,9 @@
 
 backend:
   name: github
-  repo: replace-with/github-owner-and-repo
+  repo: ydc1024/read/tree/main
   branch: main
-  base_url: https://replace-with-oauth-worker.workers.dev
+  base_url: https:auth.aicopy.work
   commit_messages:
     create: 'publish: {{slug}}'
     update: 'update: {{slug}}'
