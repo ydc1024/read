@@ -43,8 +43,8 @@ collections:
       - { label: 标题（问题式）, name: title, widget: string }
       - { label: 描述, name: description, widget: text }
       - { label: 标准化答案摘要, name: answerSummary, widget: text }
-      - { label: 发布日期, name: pubDate, widget: date, format: 'YYYY-MM-DD' }
-      - { label: 更新日期, name: updatedDate, widget: date, format: 'YYYY-MM-DD', required: false }
+      - { label: 发布日期, name: pubDate, widget: datetime, format: 'YYYY-MM-DD' }
+      - { label: 更新日期, name: updatedDate, widget: datetime, format: 'YYYY-MM-DD', required: false }
       - label: 业务场景
         name: scenario
         widget: select
